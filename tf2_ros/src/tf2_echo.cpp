@@ -37,6 +37,8 @@
 
 #include "tf2_ros/transform_listener.h"
 #include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "rclcpp/publisher.hpp"
 
 #define _USE_MATH_DEFINES
 class echoListener
@@ -116,6 +118,9 @@ int main(int argc, char ** argv)
 
   std::string source_frameid = args[1];
   std::string target_frameid = args[2];
+  
+  rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr transform_pub;
+  transform_pub = nh->create_publisher<geometry_msgs::msg::TransformStamped>("tf2_echo_results", 10);
 
   // Wait for the first transforms to become avaiable.
   std::string warning_msg;
@@ -136,6 +141,8 @@ int main(int argc, char ** argv)
       {
         geometry_msgs::msg::TransformStamped echo_transform;
         echo_transform = echoListener.buffer_.lookupTransform(source_frameid, target_frameid, tf2::TimePoint());
+            // Publishing the transformation
+        transform_pub->publish(echo_transform);
         std::cout.precision(3);
         std::cout.setf(std::ios::fixed,std::ios::floatfield);
         std::cout << "At time " << echo_transform.header.stamp.sec << "." << echo_transform.header.stamp.nanosec << std::endl;
